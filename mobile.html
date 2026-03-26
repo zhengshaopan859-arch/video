@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AudioVisual 视频解析</title>
+    <title>肥咩免费屋 视频解析</title>
     <style>
         * {
             margin: 0;
@@ -457,7 +457,7 @@
             <svg class="logo-icon" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
             </svg>
-            AudioVisual
+            肥咩免费屋
         </h1>
     </div>
 
@@ -480,7 +480,6 @@
                 <span class="webview-title" id="webviewTitle">腾讯视频</span>
                 <div class="webview-actions">
                     <button class="webview-btn" id="refreshBtn">刷新</button>
-                    <button class="webview-btn primary" id="parseCurrentBtn">解析当前页</button>
                 </div>
             </div>
             <iframe class="webview-frame" id="webframe" src="https://v.qq.com" sandbox="allow-scripts allow-forms allow-popups allow-same-origin" allow="autoplay; encrypted-media; fullscreen; geolocation; microphone; camera"></iframe>
@@ -490,7 +489,7 @@
         <div class="control-panel">
             <div class="select-row">
                 <div class="select-wrapper">
-                    <label>🔗 视频链接（手动粘贴或点"解析当前页"）</label>
+                    <label>🔗 视频链接（手动粘贴）</label>
                     <div style="display: flex; gap: 8px;">
                         <input type="text" class="url-input" id="mainInput" placeholder="手动粘贴视频链接" style="flex: 1;">
                         <button class="clear-btn" id="clearBtn">✕</button>
@@ -570,7 +569,7 @@
         </div>
     </div>
 
-    <div class="footer">AudioVisual v1.0.9</div>
+    <div class="footer">肥咩免费屋 v1.0.9</div>
 
     <script>
         const apiList = [
@@ -605,7 +604,6 @@
         const mainInput = document.getElementById('mainInput');
         const apiSelect = document.getElementById('apiSelect');
         const parseBtn = document.getElementById('parseBtn');
-        const parseCurrentBtn = document.getElementById('parseCurrentBtn');
         const refreshBtn = document.getElementById('refreshBtn');
         const speedTestBtn = document.getElementById('speedTestBtn');
         const clearBtn = document.getElementById('clearBtn');
@@ -696,28 +694,12 @@
             showToast('页面刷新中...', 'info');
         });
 
-        // 解析当前页
-        parseCurrentBtn.addEventListener('click', () => {
-            try {
-                const frameUrl = webframe.src || webframe.contentWindow?.location?.href;
-                if (frameUrl && frameUrl !== 'about:blank') {
-                    updateMainInput(frameUrl);
-                    showToast('已获取当前页面链接', 'success');
-                    doParse(frameUrl);
-                } else {
-                    showToast('无法获取页面链接', 'error');
-                }
-            } catch (e) {
-                showToast('跨域限制，请手动粘贴链接', 'error');
-            }
-        });
-
         // 解析按钮
         parseBtn.addEventListener('click', () => {
             const url = mainInput.value.trim();
             
             if (!url || url === 'about:blank' || url.includes('点击网页') || url.includes('自动获取')) {
-                showToast('请先粘贴视频链接或点击"解析当前页"', 'error');
+                showToast('请先粘贴视频链接', 'error');
                 return;
             }
 
