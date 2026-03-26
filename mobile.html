@@ -285,6 +285,11 @@
             border: 1px solid rgba(76, 175, 80, 0.3);
         }
 
+        .speed-item.selected {
+            background: rgba(76, 175, 80, 0.3);
+            border: 1px solid #4caf50;
+        }
+
         .speed-time {
             font-weight: 600;
         }
@@ -466,10 +471,10 @@
 
         <!-- 控制面板 -->
         <div class="control-panel">
-            <div class="select-row" style="grid-template-columns: 1fr;">
+            <div class="select-row">
                 <div class="select-wrapper">
-                    <label>📌 视频链接（点击上方网页自动获取）</label>
-                    <input type="text" class="url-input" id="mainInput" placeholder="点击网页中的视频链接，会自动复制到这里" readonly>
+                    <label>🔗 视频链接（手动粘贴或点"解析当前页"）</label>
+                    <input type="text" class="url-input" id="mainInput" placeholder="手动粘贴视频链接">
                 </div>
             </div>
             
@@ -477,26 +482,20 @@
                 <div class="select-wrapper">
                     <label>解析接口</label>
                     <select class="custom-select" id="apiSelect">
-                        <option value="https://jx.xmflv.com/?url=">虾米视频</option>
-                        <option value="https://jx.77flv.cc/?url=">七七云</option>
-                        <option value="https://jx.playerjy.com/?url=">Player-JY</option>
-                        <option value="https://jiexi.789jiexi.icu:4433/?url=">789解析</option>
-                        <option value="https://jx.2s0.cn/player/?url=">极速</option>
-                        <option value="https://bd.jx.cn/?url=">冰豆</option>
-                        <option value="https://jx.973973.xyz/?url=">973</option>
-                        <option value="https://www.ckplayer.vip/jiexi/?url=">CK</option>
-                        <option value="https://jx.nnxv.cn/tv.php?url=">七哥</option>
-                        <option value="https://www.yemu.xyz/?url=">夜幕</option>
-                        <option value="https://www.pangujiexi.com/jiexi/?url=">盘古</option>
-                        <option value="https://www.playm3u8.cn/jiexi.php?url=">playm3u8</option>
-                        <option value="https://video.isyour.love/player/getplayer?url=">芒果1</option>
-                        <option value="https://im1907.top/?jx=">芒果2</option>
-                        <option value="https://jx.hls.one/?url=">HLS</option>
+                        <option value="https://jx.xmflv.cc/?url=">线路01：虾米</option>
+                        <option value="https://jx.m3u8.tv/jiexi/?url=">线路02：M3U8.tv</option>
+                        <option value="https://www.ckplayer.vip/jiexi/?url=">线路03：CKPlayer</option>
+                        <option value="https://www.pangujiexi.com/jiexi/?url=">线路04：盘古</option>
+                        <option value="https://www.8090g.cn/?url=">线路05：8090g</option>
+                        <option value="https://www.playm3u8.cn/jiexi.php?url=">线路06：播放M3U8</option>
+                        <option value="https://jx.aidouler.net/?url=">线路07：爱豆</option>
+                        <option value="https://video.isyour.love/player/getplayer?url=">线路08：IsYourLove</option>
+                        <option value="https://im1907.top/?jx=">线路09：IM1907</option>
+                        <option value="https://jx.77flv.cc/?url=">线路10：七七云</option>
+                        <option value="https://jiexi.789jiexi.icu:4433/?url=">线路11：789解析</option>
+                        <option value="https://bd.jx.cn/?url=">线路12：冰豆</option>
+                        <option value="https://jx.hls.one/?url=">线路13：HLS</option>
                     </select>
-                </div>
-                <div class="select-wrapper">
-                    <label>备用输入</label>
-                    <input type="text" class="custom-select" id="manualInput" placeholder="粘贴链接" style="background: rgba(255,255,255,0.05);">
                 </div>
             </div>
 
@@ -555,21 +554,19 @@
 
     <script>
         const apiList = [
-            { name: '虾米视频', url: 'https://jx.xmflv.com/?url=' },
-            { name: '七七云', url: 'https://jx.77flv.cc/?url=' },
-            { name: 'Player-JY', url: 'https://jx.playerjy.com/?url=' },
-            { name: '789解析', url: 'https://jiexi.789jiexi.icu:4433/?url=' },
-            { name: '极速', url: 'https://jx.2s0.cn/player/?url=' },
-            { name: '冰豆', url: 'https://bd.jx.cn/?url=' },
-            { name: '973', url: 'https://jx.973973.xyz/?url=' },
-            { name: 'CK', url: 'https://www.ckplayer.vip/jiexi/?url=' },
-            { name: '七哥', url: 'https://jx.nnxv.cn/tv.php?url=' },
-            { name: '夜幕', url: 'https://www.yemu.xyz/?url=' },
-            { name: '盘古', url: 'https://www.pangujiexi.com/jiexi/?url=' },
-            { name: 'playm3u8', url: 'https://www.playm3u8.cn/jiexi.php?url=' },
-            { name: '芒果1', url: 'https://video.isyour.love/player/getplayer?url=' },
-            { name: '芒果2', url: 'https://im1907.top/?jx=' },
-            { name: 'HLS', url: 'https://jx.hls.one/?url=' }
+            { name: '线路01：虾米', url: 'https://jx.xmflv.cc/?url=' },
+            { name: '线路02：M3U8.tv', url: 'https://jx.m3u8.tv/jiexi/?url=' },
+            { name: '线路03：CKPlayer', url: 'https://www.ckplayer.vip/jiexi/?url=' },
+            { name: '线路04：盘古', url: 'https://www.pangujiexi.com/jiexi/?url=' },
+            { name: '线路05：8090g', url: 'https://www.8090g.cn/?url=' },
+            { name: '线路06：播放M3U8', url: 'https://www.playm3u8.cn/jiexi.php?url=' },
+            { name: '线路07：爱豆', url: 'https://jx.aidouer.net/?url=' },
+            { name: '线路08：IsYourLove', url: 'https://video.isyour.love/player/getplayer?url=' },
+            { name: '线路09：IM1907', url: 'https://im1907.top/?jx=' },
+            { name: '线路10：七七云', url: 'https://jx.77flv.cc/?url=' },
+            { name: '线路11：789解析', url: 'https://jiexi.789jiexi.icu:4433/?url=' },
+            { name: '线路12：冰豆', url: 'https://bd.jx.cn/?url=' },
+            { name: '线路13：HLS', url: 'https://jx.hls.one/?url=' }
         ];
 
         const videoPatterns = [
@@ -595,7 +592,6 @@
         const platformButtons = document.querySelectorAll('.platform-btn');
 
         let currentUrl = 'https://v.qq.com';
-        let capturedUrl = '';
 
         function showToast(message, type = 'info') {
             const existing = document.querySelector('.toast');
@@ -633,35 +629,29 @@
                 
                 webviewTitle.textContent = name;
                 webframe.src = url;
-                capturedUrl = '';
                 mainInput.value = '';
-                mainInput.placeholder = '点击网页中的视频链接，会自动复制到这里';
+                mainInput.placeholder = '手动粘贴视频链接';
                 lastFrameUrl = url;
             });
         });
 
-        // 使用轮询方式获取iframe当前URL（因为跨域无法直接访问contentWindow）
+        // 使用轮询方式获取iframe当前URL
         let lastFrameUrl = '';
         setInterval(() => {
             try {
-                // 尝试从iframe的src属性获取
                 const currentSrc = webframe.src;
                 if (currentSrc && currentSrc !== lastFrameUrl && currentSrc !== 'about:blank') {
                     lastFrameUrl = currentSrc;
                     
-                    // 检查是否是视频页面
                     const isVideo = videoPatterns.some(p => p.pattern.test(currentSrc));
                     if (isVideo) {
-                        capturedUrl = currentSrc;
                         mainInput.value = currentSrc;
                         mainInput.placeholder = '✓ 已获取视频链接';
                         updateJumpSection(currentSrc);
                         showToast('已获取视频链接！', 'success');
                     }
                 }
-            } catch (e) {
-                // 忽略错误
-            }
+            } catch (e) {}
         }, 1000);
         
         // iframe加载完成时检查
@@ -671,7 +661,6 @@
                 if (currentSrc && currentSrc !== 'about:blank') {
                     const isVideo = videoPatterns.some(p => p.pattern.test(currentSrc));
                     if (isVideo) {
-                        capturedUrl = currentSrc;
                         mainInput.value = currentSrc;
                         mainInput.placeholder = '✓ 已获取视频链接';
                         updateJumpSection(currentSrc);
@@ -704,14 +693,21 @@
 
         // 解析按钮
         parseBtn.addEventListener('click', () => {
-            const url = capturedUrl || mainInput.value.trim();
+            const url = mainInput.value.trim();
             
             if (!url || url === 'about:blank' || url.includes('点击网页') || url.includes('自动获取')) {
-                showToast('请先点击网页中的视频链接', 'error');
+                showToast('请先粘贴视频链接或点击"解析当前页"', 'error');
                 return;
             }
 
             doParse(url);
+        });
+
+        // 输入框回车解析
+        mainInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                parseBtn.click();
+            }
         });
 
         function doParse(url) {
@@ -737,7 +733,7 @@
         const jumpBtn = document.getElementById('jumpBtn');
 
         jumpBtn.addEventListener('click', () => {
-            const url = capturedUrl || mainInput.value.trim();
+            const url = mainInput.value.trim();
             if (url && !url.includes('点击网页') && !url.includes('自动获取')) {
                 window.open(url, '_blank');
                 showToast('已在新标签页打开视频', 'success');
@@ -789,8 +785,11 @@
             speedResults.querySelectorAll('.speed-item').forEach(item => {
                 item.addEventListener('click', () => {
                     apiSelect.value = item.dataset.url;
-                    speedResults.classList.remove('active');
-                    showToast('已切换接口', 'success');
+                    // 移除其他项的选中状态
+                    speedResults.querySelectorAll('.speed-item').forEach(i => i.classList.remove('selected'));
+                    // 添加当前项的选中状态
+                    item.classList.add('selected');
+                    showToast(`已选择: ${item.querySelector('span').textContent}`, 'success');
                 });
             });
 
