@@ -186,6 +186,23 @@
             color: rgba(255, 255, 255, 0.4);
         }
 
+        .clear-btn {
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .clear-btn:active {
+            background: rgba(255, 103, 104, 0.3);
+            border-color: #ff6768;
+            color: #fff;
+        }
+
         .select-wrapper label {
             display: block;
             font-size: 11px;
@@ -474,7 +491,10 @@
             <div class="select-row">
                 <div class="select-wrapper">
                     <label>🔗 视频链接（手动粘贴或点"解析当前页"）</label>
-                    <input type="text" class="url-input" id="mainInput" placeholder="手动粘贴视频链接">
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" class="url-input" id="mainInput" placeholder="手动粘贴视频链接" style="flex: 1;">
+                        <button class="clear-btn" id="clearBtn">✕</button>
+                    </div>
                 </div>
             </div>
             
@@ -588,6 +608,7 @@
         const parseCurrentBtn = document.getElementById('parseCurrentBtn');
         const refreshBtn = document.getElementById('refreshBtn');
         const speedTestBtn = document.getElementById('speedTestBtn');
+        const clearBtn = document.getElementById('clearBtn');
         const speedResults = document.getElementById('speedResults');
         const platformButtons = document.querySelectorAll('.platform-btn');
 
@@ -708,6 +729,13 @@
             if (e.key === 'Enter') {
                 parseBtn.click();
             }
+        });
+
+        // 清理按钮 - 清空输入框内容
+        clearBtn.addEventListener('click', () => {
+            mainInput.value = '';
+            mainInput.placeholder = '手动粘贴视频链接';
+            mainInput.focus();
         });
 
         function doParse(url) {
