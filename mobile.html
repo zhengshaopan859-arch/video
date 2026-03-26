@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AudioVisual 视频解析</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #1e1e2f 0%, #2d2d44 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .header h1 .logo-icon {
+            width: 22px;
+            height: 22px;
+            color: #ff6768;
+        }
+
+        .main-content {
+            padding: 15px;
+        }
+
+        /* 平台选择按钮 */
+        .platform-section {
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 8px;
+        }
+
+        .platform-buttons {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+        }
+
+        .platform-btn {
+            padding: 8px 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .platform-btn.active {
+            background: rgba(255, 103, 104, 0.3);
+            border-color: #ff6768;
+        }
+
+        .platform-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* 网页视图容器 */
+        .webview-wrapper {
+            margin-bottom: 15px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #000;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .webview-header {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .webview-title {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+
+        .webview-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .webview-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 11px;
+            padding: 4px 10px;
+            cursor: pointer;
+        }
+
+        .webview-btn.primary {
+            background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+        }
+
+        .webview-frame {
+            width: 100%;
+            height: 45vh;
+            min-height: 280px;
+            border: none;
+            display: block;
+        }
+
+        /* 控制面板 */
+        .control-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .url-display {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+            word-break: break-all;
+            min-height: 36px;
+        }
+
+        .url-display.empty {
+            color: rgba(255, 255, 255, 0.4);
+            font-style: italic;
+        }
+
+        .select-row {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .url-input {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 12px;
+            outline: none;
+        }
+
+        .url-input:focus {
+            border-color: #ff6768;
+        }
+
+        .url-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .select-wrapper label {
+            display: block;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 4px;
+        }
+
+        .custom-select {
+            width: 100%;
+            padding: 10px 30px 10px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 12px;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        select.custom-select {
+            background-color: #2d2d44 !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' fill-opacity='0.5' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+        }
+
+        select.custom-select option {
+            background: #2d2d44;
+            color: #fff;
+            padding: 8px;
+        }
+
+        .parse-button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #ff6768 0%, #ff8568 100%);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .parse-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .parse-button:not(:disabled):active {
+            transform: scale(0.98);
+        }
+
+        .speed-test-btn {
+            width: 100%;
+            padding: 10px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .speed-results {
+            display: none;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .speed-results.active {
+            display: block;
+        }
+
+        .speed-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .speed-item.best {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .speed-time {
+            font-weight: 600;
+        }
+
+        .speed-time.fast { color: #4caf50; }
+        .speed-time.medium { color: #ff9800; }
+        .speed-time.slow { color: #f44336; }
+
+        .tips {
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            border-left: 3px solid #ff6768;
+        }
+
+        .tips-title {
+            font-size: 12px;
+            color: #ff6768;
+            margin-bottom: 6px;
+        }
+
+        .tips-text {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.5;
+        }
+
+        .toast {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background: rgba(58, 61, 91, 0.95);
+            color: #fff;
+            border-radius: 8px;
+            font-size: 13px;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .toast.success { background: rgba(76, 175, 80, 0.9); }
+        .toast.error { background: rgba(244, 67, 54, 0.9); }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -10px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        .footer {
+            text-align: center;
+            padding: 15px;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>
+            <svg class="logo-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+            </svg>
+            AudioVisual
+        </h1>
+    </div>
+
+    <div class="main-content">
+        <!-- 平台选择 -->
+        <div class="platform-section">
+            <div class="section-title">选择平台</div>
+            <div class="platform-buttons">
+                <button class="platform-btn active" data-url="https://v.qq.com">腾讯</button>
+                <button class="platform-btn" data-url="https://www.iqiyi.com">爱奇艺</button>
+                <button class="platform-btn" data-url="https://www.youku.com">优酷</button>
+                <button class="platform-btn" data-url="https://www.bilibili.com">B站</button>
+                <button class="platform-btn" data-url="https://www.mgtv.com">芒果</button>
+            </div>
+        </div>
+
+        <!-- 网页视图 -->
+        <div class="webview-wrapper">
+            <div class="webview-header">
+                <span class="webview-title" id="webviewTitle">腾讯视频</span>
+                <div class="webview-actions">
+                    <button class="webview-btn" id="refreshBtn">刷新</button>
+                    <button class="webview-btn primary" id="parseCurrentBtn">解析当前页</button>
+                </div>
+            </div>
+            <iframe class="webview-frame" id="webframe" src="https://v.qq.com" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-pointer-lock" allow="autoplay; encrypted-media; fullscreen"></iframe>
+        </div>
+
+        <!-- 控制面板 -->
+        <div class="control-panel">
+            <div class="select-row" style="grid-template-columns: 1fr;">
+                <div class="select-wrapper">
+                    <label>📌 视频链接（点击上方网页自动获取）</label>
+                    <input type="text" class="url-input" id="mainInput" placeholder="点击网页中的视频链接，会自动复制到这里" readonly>
+                </div>
+            </div>
+            
+            <div class="select-row">
+                <div class="select-wrapper">
+                    <label>解析接口</label>
+                    <select class="custom-select" id="apiSelect">
+                        <option value="https://jx.xmflv.com/?url=">虾米视频</option>
+                        <option value="https://jx.77flv.cc/?url=">七七云</option>
+                        <option value="https://jx.playerjy.com/?url=">Player-JY</option>
+                        <option value="https://jiexi.789jiexi.icu:4433/?url=">789解析</option>
+                        <option value="https://jx.2s0.cn/player/?url=">极速</option>
+                        <option value="https://bd.jx.cn/?url=">冰豆</option>
+                        <option value="https://jx.973973.xyz/?url=">973</option>
+                        <option value="https://www.ckplayer.vip/jiexi/?url=">CK</option>
+                        <option value="https://jx.nnxv.cn/tv.php?url=">七哥</option>
+                        <option value="https://www.yemu.xyz/?url=">夜幕</option>
+                        <option value="https://www.pangujiexi.com/jiexi/?url=">盘古</option>
+                        <option value="https://www.playm3u8.cn/jiexi.php?url=">playm3u8</option>
+                        <option value="https://video.isyour.love/player/getplayer?url=">芒果1</option>
+                        <option value="https://im1907.top/?jx=">芒果2</option>
+                        <option value="https://jx.hls.one/?url=">HLS</option>
+                    </select>
+                </div>
+                <div class="select-wrapper">
+                    <label>备用输入</label>
+                    <input type="text" class="custom-select" id="manualInput" placeholder="粘贴链接" style="background: rgba(255,255,255,0.05);">
+                </div>
+            </div>
+
+            <button class="parse-button" id="parseBtn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+                解析播放
+            </button>
+
+            <button class="speed-test-btn" id="speedTestBtn">🚀 测试接口速度</button>
+            <div class="speed-results" id="speedResults"></div>
+        </div>
+
+        <div class="tips">
+            <div class="tips-title">💡 使用说明</div>
+            <div class="tips-text">
+                1. 点击上方平台按钮切换视频网站<br>
+                2. 在下方网页中点击视频或选集<br>
+                3. 链接自动复制到「主要输入」框<br>
+                4. 点击「解析播放」按钮即可
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">AudioVisual v1.0.9</div>
+
+    <script>
+        const apiList = [
+            { name: '虾米视频', url: 'https://jx.xmflv.com/?url=' },
+            { name: '七七云', url: 'https://jx.77flv.cc/?url=' },
+            { name: 'Player-JY', url: 'https://jx.playerjy.com/?url=' },
+            { name: '789解析', url: 'https://jiexi.789jiexi.icu:4433/?url=' },
+            { name: '极速', url: 'https://jx.2s0.cn/player/?url=' },
+            { name: '冰豆', url: 'https://bd.jx.cn/?url=' },
+            { name: '973', url: 'https://jx.973973.xyz/?url=' },
+            { name: 'CK', url: 'https://www.ckplayer.vip/jiexi/?url=' },
+            { name: '七哥', url: 'https://jx.nnxv.cn/tv.php?url=' },
+            { name: '夜幕', url: 'https://www.yemu.xyz/?url=' },
+            { name: '盘古', url: 'https://www.pangujiexi.com/jiexi/?url=' },
+            { name: 'playm3u8', url: 'https://www.playm3u8.cn/jiexi.php?url=' },
+            { name: '芒果1', url: 'https://video.isyour.love/player/getplayer?url=' },
+            { name: '芒果2', url: 'https://im1907.top/?jx=' },
+            { name: 'HLS', url: 'https://jx.hls.one/?url=' }
+        ];
+
+        const videoPatterns = [
+            { pattern: /v\.qq\.com\/x\/cover\// },
+            { pattern: /v\.qq\.com\/v\.pianku\// },
+            { pattern: /iqiyi\.com\/v_/ },
+            { pattern: /iqiyi\.com\/a_/ },
+            { pattern: /youku\.com\/v_show\/id_/ },
+            { pattern: /bilibili\.com\/video\// },
+            { pattern: /bilibili\.com\/bangumi\/play\// },
+            { pattern: /mgtv\.com\/b\// }
+        ];
+
+        const webframe = document.getElementById('webframe');
+        const webviewTitle = document.getElementById('webviewTitle');
+        const mainInput = document.getElementById('mainInput');
+        const apiSelect = document.getElementById('apiSelect');
+        const parseBtn = document.getElementById('parseBtn');
+        const parseCurrentBtn = document.getElementById('parseCurrentBtn');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const speedTestBtn = document.getElementById('speedTestBtn');
+        const speedResults = document.getElementById('speedResults');
+        const platformButtons = document.querySelectorAll('.platform-btn');
+
+        let currentUrl = 'https://v.qq.com';
+        let capturedUrl = '';
+
+        function showToast(message, type = 'info') {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 2000);
+        }
+
+        function isVideoPage(url) {
+            return videoPatterns.some(p => p.pattern.test(url));
+        }
+
+        function updateMainInput(url) {
+            currentUrl = url;
+            mainInput.value = url;
+            mainInput.placeholder = '已获取链接，请点击解析';
+        }
+
+        // 平台切换
+        platformButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                platformButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                const url = btn.dataset.url;
+                const name = btn.textContent;
+                
+                webviewTitle.textContent = name;
+                webframe.src = url;
+                mainInput.value = '';
+                mainInput.placeholder = '点击网页链接自动复制到这里';
+                manualInput.value = '';
+                
+                // 延迟注入脚本，拦截新窗口打开
+                setTimeout(() => injectAntiPopupScript(), 1000);
+            });
+        });
+
+        // 注入脚本，自动捕获点击的链接并填充到主要输入框
+        function injectAntiPopupScript() {
+            try {
+                const iframe = document.getElementById('webframe');
+                if (!iframe || !iframe.contentWindow) return;
+                
+                const script = `
+                    (function() {
+                        // 阻止 window.open 并获取URL
+                        window.open = function(url, target, features) {
+                            if (url) {
+                                window.location.href = url;
+                                // 通知父页面
+                                window.parent.postMessage({ type: 'url Captured', url: url }, '*');
+                            }
+                            return null;
+                        };
+                        
+                        // 拦截所有链接点击
+                        document.addEventListener('click', function(e) {
+                            const a = e.target.closest('a');
+                            if (a && a.href) {
+                                // 如果是视频相关链接，通知父页面
+                                const isVideoLink = a.href.match(/v\\.qq\\.com|iqiyi\\.com|youku\\.com|bilibili\\.com|mgtv\\.com/i);
+                                if (isVideoLink || a.href.includes('/video/') || a.href.includes('/cover/') || a.href.includes('/play/')) {
+                                    window.parent.postMessage({ type: 'url Captured', url: a.href }, '*');
+                                }
+                                
+                                // 阻止在新窗口打开
+                                if (a.target === '_blank') {
+                                    e.preventDefault();
+                                    window.location.href = a.href;
+                                    window.parent.postMessage({ type: 'url Captured', url: a.href }, '*');
+                                }
+                            }
+                        }, true);
+                        
+                        // 监听链接 hover 显示URL
+                        document.addEventListener('mouseover', function(e) {
+                            const a = e.target.closest('a');
+                            if (a && a.href && a.href !== 'about:blank') {
+                                window.parent.postMessage({ type: 'url Hover', url: a.href }, '*');
+                            }
+                        }, true);
+                    })();
+                `;
+                
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                const scriptEl = iframeDoc.createElement('script');
+                scriptEl.textContent = script;
+                iframeDoc.head.appendChild(scriptEl);
+            } catch (e) {
+                console.log('跨域限制，无法注入脚本');
+            }
+        }
+        
+        // 监听来自iframe的消息
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'url Captured' && e.data.url) {
+                mainInput.value = e.data.url;
+                mainInput.placeholder = '已自动获取链接！';
+                showToast('已获取视频链接', 'success');
+            }
+        });
+        
+        // iframe 加载完成后注入脚本
+        webframe.addEventListener('load', injectAntiPopupScript);
+
+        // 刷新按钮
+        refreshBtn.addEventListener('click', () => {
+            webframe.src = webframe.src;
+            showToast('页面刷新中...', 'info');
+        });
+
+        // 解析当前页
+        parseCurrentBtn.addEventListener('click', () => {
+            try {
+                const frameUrl = webframe.src || webframe.contentWindow?.location?.href;
+                if (frameUrl && frameUrl !== 'about:blank') {
+                    updateMainInput(frameUrl);
+                    showToast('已获取当前页面链接', 'success');
+                    doParse(frameUrl);
+                } else {
+                    showToast('无法获取页面链接', 'error');
+                }
+            } catch (e) {
+                showToast('跨域限制，请手动粘贴链接', 'error');
+            }
+        });
+
+        // 解析按钮
+        parseBtn.addEventListener('click', () => {
+            const manualUrl = manualInput.value.trim();
+            const url = manualUrl || mainInput.value.trim();
+            
+            if (!url || url === 'about:blank' || url === '点击网页链接自动复制到这里') {
+                showToast('请先选择视频或粘贴链接', 'error');
+                return;
+            }
+
+            doParse(url);
+        });
+
+        function doParse(url) {
+            const apiUrl = apiSelect.value;
+            const finalUrl = apiUrl + encodeURIComponent(url);
+            
+            // 在当前iframe中打开解析页面
+            webframe.src = finalUrl;
+            webviewTitle.textContent = '解析播放中...';
+            showToast('正在解析，请稍候...', 'success');
+        }
+
+        // 手动输入监听
+        manualInput.addEventListener('input', (e) => {
+            if (e.target.value.trim()) {
+                mainInput.value = e.target.value.trim();
+                mainInput.placeholder = '备用输入已同步';
+            }
+        });
+
+        manualInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                parseBtn.click();
+            }
+        });
+
+        // 测速功能
+        async function testSpeed(api) {
+            const start = performance.now();
+            try {
+                const ctrl = new AbortController();
+                setTimeout(() => ctrl.abort(), 5000);
+                await fetch(api.url.replace('?url=', '/'), { 
+                    method: 'HEAD', 
+                    mode: 'no-cors',
+                    signal: ctrl.signal 
+                });
+                return { ...api, latency: Math.round(performance.now() - start) };
+            } catch {
+                return { ...api, latency: null };
+            }
+        }
+
+        speedTestBtn.addEventListener('click', async () => {
+            speedTestBtn.textContent = '⏳ 测试中...';
+            speedResults.classList.add('active');
+            speedResults.innerHTML = '<div style="text-align:center;padding:15px;color:rgba(255,255,255,0.5);font-size:12px;">测试进行中...</div>';
+
+            const results = await Promise.all(apiList.map(testSpeed));
+            results.sort((a, b) => (a.latency === null ? 1 : b.latency === null ? -1 : a.latency - b.latency));
+
+            speedResults.innerHTML = results.map((r, i) => {
+                const cls = r.latency === null ? 'slow' : r.latency < 500 ? 'fast' : r.latency < 1500 ? 'medium' : 'slow';
+                const time = r.latency === null ? '超时' : `${r.latency}ms`;
+                return `<div class="speed-item ${i === 0 && r.latency ? 'best' : ''}" data-url="${r.url}">
+                    <span>${r.name}</span>
+                    <span class="speed-time ${cls}">${time}</span>
+                </div>`;
+            }).join('');
+
+            speedResults.querySelectorAll('.speed-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    apiSelect.value = item.dataset.url;
+                    speedResults.classList.remove('active');
+                    showToast('已切换接口', 'success');
+                });
+            });
+
+            speedTestBtn.textContent = '🚀 测试接口速度';
+        });
+    </script>
+</body>
+</html>
