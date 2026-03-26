@@ -293,6 +293,46 @@
         .speed-time.medium { color: #ff9800; }
         .speed-time.slow { color: #f44336; }
 
+        .jump-section {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 10px;
+        }
+
+        .jump-url {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+            word-break: break-all;
+            margin-bottom: 10px;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            max-height: 60px;
+            overflow-y: auto;
+        }
+
+        .jump-button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .jump-button:active {
+            transform: scale(0.98);
+        }
+
         .tips {
             margin-top: 15px;
             padding: 12px;
@@ -380,7 +420,7 @@
                     <button class="webview-btn primary" id="parseCurrentBtn">解析当前页</button>
                 </div>
             </div>
-            <iframe class="webview-frame" id="webframe" src="https://v.qq.com" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-pointer-lock" allow="autoplay; encrypted-media; fullscreen"></iframe>
+            <iframe class="webview-frame" id="webframe" src="https://v.qq.com" sandbox="allow-scripts allow-forms allow-popups allow-same-origin" allow="autoplay; encrypted-media; fullscreen; geolocation; microphone; camera"></iframe>
         </div>
 
         <!-- 控制面板 -->
@@ -430,13 +470,30 @@
             <div class="speed-results" id="speedResults"></div>
         </div>
 
+        <!-- 视频链接跳转区域 -->
+        <div class="jump-section" id="jumpSection" style="display: none;">
+            <div class="section-title">🔗 已获取视频链接</div>
+            <div class="jump-url" id="jumpUrl"></div>
+            <button class="jump-button" id="jumpBtn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                </svg>
+                跳转到视频页面
+            </button>
+        </div>
+
         <div class="tips">
             <div class="tips-title">💡 使用说明</div>
             <div class="tips-text">
                 1. 点击上方平台按钮切换视频网站<br>
-                2. 在下方网页中点击视频或选集<br>
-                3. 链接自动复制到「主要输入」框<br>
-                4. 点击「解析播放」按钮即可
+                2. 在下方网页中浏览并点击视频<br>
+                3. 进入视频页面后链接自动获取<br>
+                4. 点击「解析播放」按钮观看<br>
+                <br>
+                📱 <strong>手机用户提示：</strong><br>
+                • 如网页显示异常，请点击「跳转到视频页面」<br>
+                • 在手机浏览器中操作后返回本页<br>
+                • 或复制链接粘贴到输入框解析
             </div>
         </div>
     </div>
@@ -523,82 +580,52 @@
                 
                 webviewTitle.textContent = name;
                 webframe.src = url;
+                capturedUrl = '';
                 mainInput.value = '';
-                mainInput.placeholder = '点击网页链接自动复制到这里';
-                manualInput.value = '';
-                
-                // 延迟注入脚本，拦截新窗口打开
-                setTimeout(() => injectAntiPopupScript(), 1000);
+                mainInput.placeholder = '点击网页中的视频链接，会自动复制到这里';
+                lastFrameUrl = url;
             });
         });
 
-        // 注入脚本，自动捕获点击的链接并填充到主要输入框
-        function injectAntiPopupScript() {
+        // 使用轮询方式获取iframe当前URL（因为跨域无法直接访问contentWindow）
+        let lastFrameUrl = '';
+        setInterval(() => {
             try {
-                const iframe = document.getElementById('webframe');
-                if (!iframe || !iframe.contentWindow) return;
-                
-                const script = `
-                    (function() {
-                        // 阻止 window.open 并获取URL
-                        window.open = function(url, target, features) {
-                            if (url) {
-                                window.location.href = url;
-                                // 通知父页面
-                                window.parent.postMessage({ type: 'url Captured', url: url }, '*');
-                            }
-                            return null;
-                        };
-                        
-                        // 拦截所有链接点击
-                        document.addEventListener('click', function(e) {
-                            const a = e.target.closest('a');
-                            if (a && a.href) {
-                                // 如果是视频相关链接，通知父页面
-                                const isVideoLink = a.href.match(/v\\.qq\\.com|iqiyi\\.com|youku\\.com|bilibili\\.com|mgtv\\.com/i);
-                                if (isVideoLink || a.href.includes('/video/') || a.href.includes('/cover/') || a.href.includes('/play/')) {
-                                    window.parent.postMessage({ type: 'url Captured', url: a.href }, '*');
-                                }
-                                
-                                // 阻止在新窗口打开
-                                if (a.target === '_blank') {
-                                    e.preventDefault();
-                                    window.location.href = a.href;
-                                    window.parent.postMessage({ type: 'url Captured', url: a.href }, '*');
-                                }
-                            }
-                        }, true);
-                        
-                        // 监听链接 hover 显示URL
-                        document.addEventListener('mouseover', function(e) {
-                            const a = e.target.closest('a');
-                            if (a && a.href && a.href !== 'about:blank') {
-                                window.parent.postMessage({ type: 'url Hover', url: a.href }, '*');
-                            }
-                        }, true);
-                    })();
-                `;
-                
-                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                const scriptEl = iframeDoc.createElement('script');
-                scriptEl.textContent = script;
-                iframeDoc.head.appendChild(scriptEl);
+                // 尝试从iframe的src属性获取
+                const currentSrc = webframe.src;
+                if (currentSrc && currentSrc !== lastFrameUrl && currentSrc !== 'about:blank') {
+                    lastFrameUrl = currentSrc;
+                    
+                    // 检查是否是视频页面
+                    const isVideo = videoPatterns.some(p => p.pattern.test(currentSrc));
+                    if (isVideo) {
+                        capturedUrl = currentSrc;
+                        mainInput.value = currentSrc;
+                        mainInput.placeholder = '✓ 已获取视频链接';
+                        updateJumpSection(currentSrc);
+                        showToast('已获取视频链接！', 'success');
+                    }
+                }
             } catch (e) {
-                console.log('跨域限制，无法注入脚本');
+                // 忽略错误
             }
-        }
+        }, 1000);
         
-        // 监听来自iframe的消息
-        window.addEventListener('message', function(e) {
-            if (e.data && e.data.type === 'url Captured' && e.data.url) {
-                mainInput.value = e.data.url;
-                mainInput.placeholder = '已自动获取链接！';
-                showToast('已获取视频链接', 'success');
-            }
+        // iframe加载完成时检查
+        webframe.addEventListener('load', () => {
+            try {
+                const currentSrc = webframe.src;
+                if (currentSrc && currentSrc !== 'about:blank') {
+                    const isVideo = videoPatterns.some(p => p.pattern.test(currentSrc));
+                    if (isVideo) {
+                        capturedUrl = currentSrc;
+                        mainInput.value = currentSrc;
+                        mainInput.placeholder = '✓ 已获取视频链接';
+                        updateJumpSection(currentSrc);
+                    }
+                }
+            } catch (e) {}
         });
-        
-        // iframe 加载完成后注入脚本
-        webframe.addEventListener('load', injectAntiPopupScript);
 
         // 刷新按钮
         refreshBtn.addEventListener('click', () => {
@@ -624,11 +651,10 @@
 
         // 解析按钮
         parseBtn.addEventListener('click', () => {
-            const manualUrl = manualInput.value.trim();
-            const url = manualUrl || mainInput.value.trim();
+            const url = capturedUrl || mainInput.value.trim();
             
-            if (!url || url === 'about:blank' || url === '点击网页链接自动复制到这里') {
-                showToast('请先选择视频或粘贴链接', 'error');
+            if (!url || url === 'about:blank' || url.includes('点击网页') || url.includes('自动获取')) {
+                showToast('请先点击网页中的视频链接', 'error');
                 return;
             }
 
@@ -645,19 +671,33 @@
             showToast('正在解析，请稍候...', 'success');
         }
 
-        // 手动输入监听
-        manualInput.addEventListener('input', (e) => {
-            if (e.target.value.trim()) {
-                mainInput.value = e.target.value.trim();
-                mainInput.placeholder = '备用输入已同步';
-            }
-        });
-
-        manualInput.addEventListener('keypress', (e) => {
+        // 输入框回车解析
+        mainInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 parseBtn.click();
             }
         });
+
+        // 跳转按钮功能
+        const jumpSection = document.getElementById('jumpSection');
+        const jumpUrl = document.getElementById('jumpUrl');
+        const jumpBtn = document.getElementById('jumpBtn');
+
+        jumpBtn.addEventListener('click', () => {
+            const url = capturedUrl || mainInput.value.trim();
+            if (url && !url.includes('点击网页') && !url.includes('自动获取')) {
+                window.open(url, '_blank');
+                showToast('已在新标签页打开视频', 'success');
+            }
+        });
+
+        // 更新跳转区域显示
+        function updateJumpSection(url) {
+            if (url && !url.includes('点击网页') && !url.includes('自动获取')) {
+                jumpSection.style.display = 'block';
+                jumpUrl.textContent = url;
+            }
+        }
 
         // 测速功能
         async function testSpeed(api) {
